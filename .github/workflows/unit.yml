@@ -1,0 +1,34 @@
+name: Run Unit Tests
+
+on:
+  pull_request:
+    branches: 
+      - main  # Тесты запускаются при открытии PR в ветку main
+  push:
+    branches:
+      - main  # Тесты запускаются при пуше в ветку main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest  # Запуск на Ubuntu
+
+    steps:
+      # Шаг 1: Клонировать репозиторий
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Шаг 2: Настроить Node.js (версия 16)
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
+      # Шаг 3: Установить зависимости с помощью npm ci (более быстрый способ)
+      - name: Install dependencies
+        run: |
+          npm ci  # Используем 'npm ci' для быстрой установки зависимостей
+
+      # Шаг 4: Запуск тестов (Jest)
+      - name: Run tests
+        run: |
+          npm test -- --watchAll=false --maxWorkers=2  # Запускаем тесты без режима watch и ограничиваем количество потоков
