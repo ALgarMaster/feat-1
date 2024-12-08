@@ -1,0 +1,44 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read  # Для доступа на чтение репозитория (для checkout)
+  issues: write    # Для возможности комментировать выпущенные issues
+  pull-requests: write  # Для возможности комментировать PR после релиза
+  id-token: write  # Для использования OIDC (OpenID Connect) для npm provenance
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Для публикации релизов
+      issues: write
+      pull-requests: write
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Чтобы получить полную историю репозитория
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "lts/*"
+
+      - name: Install dependencies
+        run: npm ci  # Используем ci вместо clean-install, т.к. это правильный способ установки зависимостей на CI
+
+      - name: Verify the integrity of provenance attestations and registry signatures for installed dependencies
+        run: npm audit --audit-level=high  # Проверка на наличие уязвимостей
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
